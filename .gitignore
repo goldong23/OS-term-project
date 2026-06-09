@@ -1,0 +1,7 @@
+verification/*.exe
+verification/*.pdb
+verification/rendered_report/
+**/bin/Debug/
+**/obj/
+*.tmp
+~$*
