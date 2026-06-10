@@ -142,9 +142,24 @@ namespace Memory_Policy_Simulator
                     return;
                 }
 
+                int clockStart;
+                int resetInterval;
+
+                if (!int.TryParse(this.tbClockStart.Text, out clockStart) || clockStart <= 0)
+                {
+                    MessageBox.Show("Clock start must be a positive frame number.");
+                    return;
+                }
+
+                if (!int.TryParse(this.tbResetInterval.Text, out resetInterval) || resetInterval < 0)
+                {
+                    MessageBox.Show("R reset interval must be zero or a positive number.");
+                    return;
+                }
+
                 /* initalize */
                 Core.ReplacementPolicy policy = Core.ParsePolicy(this.comboBox1.Text);
-                var window = new Core(windowSize, policy);
+                var window = new Core(windowSize, policy, clockStart, resetInterval, this.tbModifiedPages.Text);
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 for (int i = 0; i < data.Length; i++)
@@ -155,7 +170,8 @@ namespace Memory_Policy_Simulator
                     string victimText = current.hasVictim ? ", victim=" + current.victim : "";
                     this.tbConsole.Text += "[" + (i + 1) + "] DATA " + element + " is " +
                         ((status == Page.STATUS.PAGEFAULT) ? "Page Fault" : status == Page.STATUS.MIGRATION ? "Migrated" : "Hit")
-                        + victimText + ", frames=[" + current.frameSnapshot + "]\r\n";
+                        + victimText + ", frames=[" + current.frameSnapshot + "]"
+                        + ", state={" + current.algorithmState + "}\r\n";
                 }
 
                 stopwatch.Stop();
@@ -166,6 +182,8 @@ namespace Memory_Policy_Simulator
                 float faultRate = total == 0 ? 0 : (float)window.fault / total;
 
                 this.tbConsole.Text += "\r\nPolicy: " + this.comboBox1.Text + "\r\n";
+                this.tbConsole.Text += "Policy Detail: " + window.GetPolicyDescription() + "\r\n";
+                this.tbConsole.Text += "Modified Pages Input: " + (this.tbModifiedPages.Text == "" ? "(none)" : this.tbModifiedPages.Text) + "\r\n";
                 this.tbConsole.Text += "Hit Count: " + window.hit + "\r\n";
                 this.tbConsole.Text += "Page Fault Count: " + window.fault + "\r\n";
                 this.tbConsole.Text += "Migration Count: " + window.migration + "\r\n";
@@ -214,6 +232,14 @@ namespace Memory_Policy_Simulator
                 {
                     e.Handled = true;
                 }
+        }
+
+        private void tbNumeric_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!(Char.IsDigit(e.KeyChar)) && e.KeyChar != 8)
+            {
+                e.Handled = true;
+            }
         }
 
         private void btnRand_Click(object sender, EventArgs e)

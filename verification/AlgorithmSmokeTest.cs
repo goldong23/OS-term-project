@@ -4,9 +4,9 @@ namespace Memory_Policy_Simulator
 {
     class AlgorithmSmokeTest
     {
-        static int Run(string referenceString, int frameSize, Core.ReplacementPolicy policy)
+        static int Run(string referenceString, int frameSize, Core.ReplacementPolicy policy, int clockStart, int resetInterval, string modifiedPages)
         {
-            Core core = new Core(frameSize, policy);
+            Core core = new Core(frameSize, policy, clockStart, resetInterval, modifiedPages);
 
             for (int i = 0; i < referenceString.Length; i++)
             {
@@ -29,9 +29,11 @@ namespace Memory_Policy_Simulator
         {
             string referenceString = "123412512345";
 
-            Expect("FIFO/4", Run(referenceString, 4, Core.ReplacementPolicy.FIFO), 10);
-            Expect("Optimal/4", Run(referenceString, 4, Core.ReplacementPolicy.Optimal), 6);
-            Expect("LRU/4", Run(referenceString, 4, Core.ReplacementPolicy.LRU), 8);
+            Expect("FIFO/4", Run(referenceString, 4, Core.ReplacementPolicy.FIFO, 1, 4, "14"), 10);
+            Expect("NUR(0,1 first)/4", Run(referenceString, 4, Core.ReplacementPolicy.NUR_01_First, 1, 4, "14"), 7);
+            Expect("NUR(1,0 first)/4", Run(referenceString, 4, Core.ReplacementPolicy.NUR_10_First, 1, 4, "14"), 7);
+            Expect("SecondChance/4 clock=2", Run(referenceString, 4, Core.ReplacementPolicy.SecondChance, 2, 4, "14"), 7);
+            Expect("LRFU-Lite/4", Run(referenceString, 4, Core.ReplacementPolicy.LRFULite, 1, 4, "14"), 8);
             Console.WriteLine(Environment.ExitCode == 0 ? "Smoke test passed." : "Smoke test failed.");
         }
     }

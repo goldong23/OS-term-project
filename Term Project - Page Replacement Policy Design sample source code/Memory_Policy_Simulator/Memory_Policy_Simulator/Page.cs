@@ -25,6 +25,7 @@ namespace Memory_Policy_Simulator
         public char victim;
         public string frameSnapshot;
         public string detail;
+        public string algorithmState;
     }
 
 }

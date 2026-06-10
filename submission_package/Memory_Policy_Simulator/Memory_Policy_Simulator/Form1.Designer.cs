@@ -47,6 +47,12 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.lbPageFaultRatio = new System.Windows.Forms.Label();
+            this.tbClockStart = new System.Windows.Forms.TextBox();
+            this.tbResetInterval = new System.Windows.Forms.TextBox();
+            this.tbModifiedPages = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -86,20 +92,20 @@
             // 
             this.pImage.AutoScroll = true;
             this.pImage.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pImage.Location = new System.Drawing.Point(12, 97);
+            this.pImage.Location = new System.Drawing.Point(12, 145);
             this.pImage.Name = "pImage";
-            this.pImage.Size = new System.Drawing.Size(871, 629);
+            this.pImage.Size = new System.Drawing.Size(871, 581);
             this.pImage.TabIndex = 4;
             // 
             // tbConsole
             // 
             this.tbConsole.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbConsole.Font = new System.Drawing.Font("Tahoma", 8.25F);
-            this.tbConsole.Location = new System.Drawing.Point(889, 97);
+            this.tbConsole.Location = new System.Drawing.Point(889, 145);
             this.tbConsole.Multiline = true;
             this.tbConsole.Name = "tbConsole";
             this.tbConsole.ReadOnly = true;
-            this.tbConsole.Size = new System.Drawing.Size(393, 203);
+            this.tbConsole.Size = new System.Drawing.Size(393, 245);
             this.tbConsole.TabIndex = 5;
             // 
             // chart1
@@ -111,14 +117,14 @@
             legend2.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
             legend2.Name = "Legend1";
             this.chart1.Legends.Add(legend2);
-            this.chart1.Location = new System.Drawing.Point(889, 306);
+            this.chart1.Location = new System.Drawing.Point(889, 396);
             this.chart1.Name = "chart1";
             this.chart1.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Light;
             series2.ChartArea = "ChartArea1";
             series2.Legend = "Legend1";
             series2.Name = "Series1";
             this.chart1.Series.Add(series2);
-            this.chart1.Size = new System.Drawing.Size(393, 390);
+            this.chart1.Size = new System.Drawing.Size(393, 300);
             this.chart1.TabIndex = 6;
             this.chart1.Text = "chart1";
             this.chart1.Click += new System.EventHandler(this.chart1_Click);
@@ -150,13 +156,13 @@
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Items.AddRange(new object[] {
             "FIFO",
-            "Optimal",
-            "LRU",
+            "NUR (0,1 first)",
+            "NUR (1,0 first)",
             "Second Chance",
             "LRFU-Lite"});
             this.comboBox1.Location = new System.Drawing.Point(12, 34);
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(121, 32);
+            this.comboBox1.Size = new System.Drawing.Size(156, 32);
             this.comboBox1.TabIndex = 8;
             this.comboBox1.Text = "FIFO";
             // 
@@ -209,11 +215,79 @@
             this.lbPageFaultRatio.Size = new System.Drawing.Size(0, 27);
             this.lbPageFaultRatio.TabIndex = 9;
             // 
+            // tbClockStart
+            // 
+            this.tbClockStart.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.tbClockStart.Font = new System.Drawing.Font("Tahoma", 8.25F);
+            this.tbClockStart.Location = new System.Drawing.Point(174, 96);
+            this.tbClockStart.Name = "tbClockStart";
+            this.tbClockStart.Size = new System.Drawing.Size(117, 34);
+            this.tbClockStart.TabIndex = 10;
+            this.tbClockStart.Text = "1";
+            this.tbClockStart.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbNumeric_KeyPress);
+            // 
+            // tbResetInterval
+            // 
+            this.tbResetInterval.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.tbResetInterval.Font = new System.Drawing.Font("Tahoma", 8.25F);
+            this.tbResetInterval.Location = new System.Drawing.Point(297, 96);
+            this.tbResetInterval.Name = "tbResetInterval";
+            this.tbResetInterval.Size = new System.Drawing.Size(117, 34);
+            this.tbResetInterval.TabIndex = 11;
+            this.tbResetInterval.Text = "4";
+            this.tbResetInterval.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbNumeric_KeyPress);
+            // 
+            // tbModifiedPages
+            // 
+            this.tbModifiedPages.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.tbModifiedPages.Font = new System.Drawing.Font("Tahoma", 8.25F);
+            this.tbModifiedPages.Location = new System.Drawing.Point(420, 96);
+            this.tbModifiedPages.Name = "tbModifiedPages";
+            this.tbModifiedPages.Size = new System.Drawing.Size(340, 34);
+            this.tbModifiedPages.TabIndex = 12;
+            this.tbModifiedPages.Text = "AD";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Tahoma", 8.25F);
+            this.label5.Location = new System.Drawing.Point(174, 66);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(117, 27);
+            this.label5.TabIndex = 13;
+            this.label5.Text = "Clock Start";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Tahoma", 8.25F);
+            this.label6.Location = new System.Drawing.Point(297, 66);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(91, 27);
+            this.label6.TabIndex = 14;
+            this.label6.Text = "R Reset";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Font = new System.Drawing.Font("Tahoma", 8.25F);
+            this.label7.Location = new System.Drawing.Point(420, 66);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(163, 27);
+            this.label7.TabIndex = 15;
+            this.label7.Text = "Modified Pages";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(13F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1299, 739);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.tbModifiedPages);
+            this.Controls.Add(this.tbResetInterval);
+            this.Controls.Add(this.tbClockStart);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.lbPageFaultRatio);
             this.Controls.Add(this.label4);
@@ -258,6 +332,12 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label lbPageFaultRatio;
+        private System.Windows.Forms.TextBox tbClockStart;
+        private System.Windows.Forms.TextBox tbResetInterval;
+        private System.Windows.Forms.TextBox tbModifiedPages;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label7;
     }
 }
 
