@@ -4,9 +4,9 @@ namespace Memory_Policy_Simulator
 {
     class AnalysisData
     {
-        static void Run(string workloadName, string referenceString, int frameSize, Core.ReplacementPolicy policy, int clockStart, int resetInterval, string modifiedPages)
+        static void Run(string workloadName, string referenceString, int frameSize, Core.ReplacementPolicy policy, int clock, string modifiedPages)
         {
-            Core core = new Core(frameSize, policy, clockStart, resetInterval, modifiedPages);
+            Core core = new Core(frameSize, policy, clock, modifiedPages);
 
             for (int i = 0; i < referenceString.Length; i++)
             {
@@ -14,7 +14,7 @@ namespace Memory_Policy_Simulator
             }
 
             double faultRate = Math.Round((double)core.fault / referenceString.Length * 100.0, 2);
-            Console.WriteLine(workloadName + "," + referenceString + "," + frameSize + "," + policy + "," + clockStart + "," + resetInterval + "," + modifiedPages + "," + core.hit + "," + core.fault + "," + core.migration + "," + faultRate + "," + core.GetEstimatedPageFaultDelay());
+            Console.WriteLine(workloadName + "," + referenceString + "," + frameSize + "," + policy + "," + clock + "," + modifiedPages + "," + core.hit + "," + core.fault + "," + core.migration + "," + faultRate + "," + core.GetEstimatedPageFaultDelay());
         }
 
         static void Main()
@@ -28,10 +28,10 @@ namespace Memory_Policy_Simulator
                 Core.ReplacementPolicy.NUR_01_First,
                 Core.ReplacementPolicy.NUR_10_First,
                 Core.ReplacementPolicy.SecondChance,
-                Core.ReplacementPolicy.LRFULite
+                Core.ReplacementPolicy.WSClockLite
             };
 
-            Console.WriteLine("Workload,ReferenceString,Frames,Policy,ClockStart,ResetInterval,ModifiedPages,Hit,Fault,Migration,FaultRate,EstimatedDelayMs");
+            Console.WriteLine("Workload,ReferenceString,Frames,Policy,Clock,ModifiedPages,Hit,Fault,Migration,FaultRate,EstimatedDelayMs");
 
             for (int w = 0; w < refs.Length; w++)
             {
@@ -39,26 +39,26 @@ namespace Memory_Policy_Simulator
                 {
                     foreach (Core.ReplacementPolicy policy in policies)
                     {
-                        Run(names[w], refs[w], frameSize, policy, 1, 4, "AD");
+                        Run(names[w], refs[w], frameSize, policy, 4, "AD");
                     }
                 }
             }
 
-            foreach (int clockStart in new[] { 1, 2, 3, 4 })
+            foreach (int clock in new[] { 2, 3, 4, 6 })
             {
-                Run("ClockParam", "ABCDEABCDA", 4, Core.ReplacementPolicy.SecondChance, clockStart, 4, "AD");
+                Run("ClockParam", "ABCDEABCDA", 4, Core.ReplacementPolicy.SecondChance, clock, "AD");
             }
 
-            foreach (int resetInterval in new[] { 2, 3, 4, 6 })
+            foreach (int clock in new[] { 2, 3, 4, 6 })
             {
-                Run("ResetParam", "ABCDABEFABGHABCD", 4, Core.ReplacementPolicy.NUR_01_First, 1, resetInterval, "AD");
-                Run("ResetParam", "ABCDABEFABGHABCD", 4, Core.ReplacementPolicy.NUR_10_First, 1, resetInterval, "AD");
+                Run("NURClockParam", "ABCDABEFABGHABCD", 4, Core.ReplacementPolicy.NUR_01_First, clock, "AD");
+                Run("NURClockParam", "ABCDABEFABGHABCD", 4, Core.ReplacementPolicy.NUR_10_First, clock, "AD");
             }
 
             foreach (string modifiedPages in new[] { "A", "AD", "BDF", "" })
             {
-                Run("ModifiedParam", "ABCDABEFABGHABCD", 4, Core.ReplacementPolicy.NUR_01_First, 1, 4, modifiedPages);
-                Run("ModifiedParam", "ABCDABEFABGHABCD", 4, Core.ReplacementPolicy.NUR_10_First, 1, 4, modifiedPages);
+                Run("ModifiedParam", "ABCDABEFABGHABCD", 4, Core.ReplacementPolicy.NUR_01_First, 4, modifiedPages);
+                Run("ModifiedParam", "ABCDABEFABGHABCD", 4, Core.ReplacementPolicy.NUR_10_First, 4, modifiedPages);
             }
         }
     }

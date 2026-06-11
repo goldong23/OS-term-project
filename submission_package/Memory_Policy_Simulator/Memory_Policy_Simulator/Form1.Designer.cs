@@ -47,10 +47,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.lbPageFaultRatio = new System.Windows.Forms.Label();
-            this.tbClockStart = new System.Windows.Forms.TextBox();
             this.tbResetInterval = new System.Windows.Forms.TextBox();
             this.tbModifiedPages = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
@@ -71,9 +69,9 @@
             // 
             this.tbWindowSize.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbWindowSize.Font = new System.Drawing.Font("Tahoma", 8.25F);
-            this.tbWindowSize.Location = new System.Drawing.Point(766, 33);
+            this.tbWindowSize.Location = new System.Drawing.Point(562, 33);
             this.tbWindowSize.Name = "tbWindowSize";
-            this.tbWindowSize.Size = new System.Drawing.Size(117, 34);
+            this.tbWindowSize.Size = new System.Drawing.Size(70, 34);
             this.tbWindowSize.TabIndex = 1;
             this.tbWindowSize.Text = "4";
             this.tbWindowSize.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tbWindowSize_KeyDown);
@@ -85,7 +83,7 @@
             this.tbQueryString.Font = new System.Drawing.Font("Tahoma", 8.25F);
             this.tbQueryString.Location = new System.Drawing.Point(174, 33);
             this.tbQueryString.Name = "tbQueryString";
-            this.tbQueryString.Size = new System.Drawing.Size(586, 34);
+            this.tbQueryString.Size = new System.Drawing.Size(380, 34);
             this.tbQueryString.TabIndex = 2;
             // 
             // pImage
@@ -159,7 +157,7 @@
             "NUR (0,1 first)",
             "NUR (1,0 first)",
             "Second Chance",
-            "LRFU-Lite"});
+            "WSClock-Lite"});
             this.comboBox1.Location = new System.Drawing.Point(12, 34);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(156, 32);
@@ -180,7 +178,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Tahoma", 8.25F);
-            this.label2.Location = new System.Drawing.Point(377, 2);
+            this.label2.Location = new System.Drawing.Point(280, 2);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(174, 27);
             this.label2.TabIndex = 9;
@@ -190,7 +188,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Tahoma", 8.25F);
-            this.label3.Location = new System.Drawing.Point(771, 1);
+            this.label3.Location = new System.Drawing.Point(555, 1);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(89, 27);
             this.label3.TabIndex = 9;
@@ -215,24 +213,13 @@
             this.lbPageFaultRatio.Size = new System.Drawing.Size(0, 27);
             this.lbPageFaultRatio.TabIndex = 9;
             // 
-            // tbClockStart
-            // 
-            this.tbClockStart.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.tbClockStart.Font = new System.Drawing.Font("Tahoma", 8.25F);
-            this.tbClockStart.Location = new System.Drawing.Point(174, 96);
-            this.tbClockStart.Name = "tbClockStart";
-            this.tbClockStart.Size = new System.Drawing.Size(117, 34);
-            this.tbClockStart.TabIndex = 10;
-            this.tbClockStart.Text = "1";
-            this.tbClockStart.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbNumeric_KeyPress);
-            // 
             // tbResetInterval
             // 
             this.tbResetInterval.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbResetInterval.Font = new System.Drawing.Font("Tahoma", 8.25F);
-            this.tbResetInterval.Location = new System.Drawing.Point(297, 96);
+            this.tbResetInterval.Location = new System.Drawing.Point(644, 33);
             this.tbResetInterval.Name = "tbResetInterval";
-            this.tbResetInterval.Size = new System.Drawing.Size(117, 34);
+            this.tbResetInterval.Size = new System.Drawing.Size(70, 34);
             this.tbResetInterval.TabIndex = 11;
             this.tbResetInterval.Text = "4";
             this.tbResetInterval.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbNumeric_KeyPress);
@@ -241,53 +228,40 @@
             // 
             this.tbModifiedPages.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbModifiedPages.Font = new System.Drawing.Font("Tahoma", 8.25F);
-            this.tbModifiedPages.Location = new System.Drawing.Point(420, 96);
+            this.tbModifiedPages.Location = new System.Drawing.Point(724, 33);
             this.tbModifiedPages.Name = "tbModifiedPages";
-            this.tbModifiedPages.Size = new System.Drawing.Size(340, 34);
+            this.tbModifiedPages.Size = new System.Drawing.Size(152, 34);
             this.tbModifiedPages.TabIndex = 12;
             this.tbModifiedPages.Text = "AD";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Tahoma", 8.25F);
-            this.label5.Location = new System.Drawing.Point(174, 66);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(117, 27);
-            this.label5.TabIndex = 13;
-            this.label5.Text = "Clock Start";
             // 
             // label6
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Tahoma", 8.25F);
-            this.label6.Location = new System.Drawing.Point(297, 66);
+            this.label6.Location = new System.Drawing.Point(650, 1);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(91, 27);
             this.label6.TabIndex = 14;
-            this.label6.Text = "R Reset";
+            this.label6.Text = "Clock";
             // 
             // label7
             // 
             this.label7.AutoSize = true;
             this.label7.Font = new System.Drawing.Font("Tahoma", 8.25F);
-            this.label7.Location = new System.Drawing.Point(420, 66);
+            this.label7.Location = new System.Drawing.Point(725, 1);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(163, 27);
             this.label7.TabIndex = 15;
-            this.label7.Text = "Modified Pages";
+            this.label7.Text = "Modified";
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(13F, 24F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.ClientSize = new System.Drawing.Size(1299, 739);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.label6);
-            this.Controls.Add(this.label5);
             this.Controls.Add(this.tbModifiedPages);
             this.Controls.Add(this.tbResetInterval);
-            this.Controls.Add(this.tbClockStart);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.lbPageFaultRatio);
             this.Controls.Add(this.label4);
@@ -332,10 +306,8 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label lbPageFaultRatio;
-        private System.Windows.Forms.TextBox tbClockStart;
         private System.Windows.Forms.TextBox tbResetInterval;
         private System.Windows.Forms.TextBox tbModifiedPages;
-        private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
     }

@@ -21,6 +21,10 @@ namespace Memory_Policy_Simulator
         public Form1()
         {
             InitializeComponent();
+            if (this.comboBox1.SelectedIndex < 0)
+            {
+                this.comboBox1.SelectedIndex = 0;
+            }
             this.pbPlaceHolder = new PictureBox();
             this.bResultImage = new Bitmap(2048, 2048);
             this.pbPlaceHolder.Size = new Size(2048, 2048);
@@ -29,6 +33,9 @@ namespace Memory_Policy_Simulator
             this.pImage.Controls.Add(this.pbPlaceHolder);
             this.tbConsole.Multiline = true;
             this.tbConsole.ScrollBars = ScrollBars.Vertical;
+            this.comboBox1.SelectedIndexChanged += new EventHandler(this.comboBox1_SelectedIndexChanged);
+            this.comboBox1.TextChanged += new EventHandler(this.comboBox1_SelectedIndexChanged);
+            UpdatePolicyOptions();
         }
 
         private void DrawBase(Core core, int windowSize, int dataLength)
@@ -142,24 +149,26 @@ namespace Memory_Policy_Simulator
                     return;
                 }
 
-                int clockStart;
-                int resetInterval;
-
-                if (!int.TryParse(this.tbClockStart.Text, out clockStart) || clockStart <= 0)
-                {
-                    MessageBox.Show("Clock start must be a positive frame number.");
-                    return;
-                }
-
-                if (!int.TryParse(this.tbResetInterval.Text, out resetInterval) || resetInterval < 0)
-                {
-                    MessageBox.Show("R reset interval must be zero or a positive number.");
-                    return;
-                }
-
                 /* initalize */
                 Core.ReplacementPolicy policy = Core.ParsePolicy(this.comboBox1.Text);
-                var window = new Core(windowSize, policy, clockStart, resetInterval, this.tbModifiedPages.Text);
+                int clock = 0;
+                string modifiedPages = "";
+
+                if (UsesClock(policy))
+                {
+                    if (!int.TryParse(this.tbResetInterval.Text, out clock) || clock < 0)
+                    {
+                        MessageBox.Show("Clock must be zero or a positive number.");
+                        return;
+                    }
+                }
+
+                if (UsesModifiedPages(policy))
+                {
+                    modifiedPages = this.tbModifiedPages.Text;
+                }
+
+                var window = new Core(windowSize, policy, clock, modifiedPages);
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 for (int i = 0; i < data.Length; i++)
@@ -183,7 +192,14 @@ namespace Memory_Policy_Simulator
 
                 this.tbConsole.Text += "\r\nPolicy: " + this.comboBox1.Text + "\r\n";
                 this.tbConsole.Text += "Policy Detail: " + window.GetPolicyDescription() + "\r\n";
-                this.tbConsole.Text += "Modified Pages Input: " + (this.tbModifiedPages.Text == "" ? "(none)" : this.tbModifiedPages.Text) + "\r\n";
+                if (UsesClock(policy))
+                {
+                    this.tbConsole.Text += "Clock: " + clock + "\r\n";
+                }
+                if (UsesModifiedPages(policy))
+                {
+                    this.tbConsole.Text += "Modified Pages Input: " + (modifiedPages == "" ? "(none)" : modifiedPages) + "\r\n";
+                }
                 this.tbConsole.Text += "Hit Count: " + window.hit + "\r\n";
                 this.tbConsole.Text += "Page Fault Count: " + window.fault + "\r\n";
                 this.tbConsole.Text += "Migration Count: " + window.migration + "\r\n";
@@ -199,9 +215,9 @@ namespace Memory_Policy_Simulator
                 resultChartContent.Points.AddXY("Hit", window.hit);
                 resultChartContent.Points.AddXY("Fault", window.fault);
                 resultChartContent.Points[0].IsValueShownAsLabel = true;
-                resultChartContent.Points[0].LegendText = $"Hit {window.hit}";
+                resultChartContent.Points[0].LegendText = "Hit " + window.hit;
                 resultChartContent.Points[1].IsValueShownAsLabel = true;
-                resultChartContent.Points[1].LegendText = $"Fault {window.fault} (Migrated {window.migration})";
+                resultChartContent.Points[1].LegendText = "Fault " + window.fault + " (Migrated " + window.migration + ")";
 
                 this.lbPageFaultRatio.Text = Math.Round(faultRate * 100, 2) + "%";
             }
@@ -261,6 +277,47 @@ namespace Memory_Policy_Simulator
         private void btnSave_Click(object sender, EventArgs e)
         {
             bResultImage.Save("./result.jpg");
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdatePolicyOptions();
+        }
+
+        private void UpdatePolicyOptions()
+        {
+            Core.ReplacementPolicy policy = Core.ParsePolicy(this.comboBox1.Text);
+            bool usesClock = UsesClock(policy);
+            bool usesModifiedPages = UsesModifiedPages(policy);
+
+            this.label6.Visible = usesClock;
+            this.tbResetInterval.Visible = usesClock;
+            this.label7.Visible = usesModifiedPages;
+            this.tbModifiedPages.Visible = usesModifiedPages;
+
+            this.label6.Text = "Clock";
+            this.label7.Text = "Modified";
+            this.label6.Location = new Point(650, 1);
+            this.tbResetInterval.Location = new Point(644, 33);
+            this.tbResetInterval.Width = 70;
+            this.label7.Location = new Point(725, 1);
+            this.tbModifiedPages.Location = new Point(724, 33);
+            this.tbModifiedPages.Width = 152;
+        }
+
+        private static bool UsesClock(Core.ReplacementPolicy policy)
+        {
+            return policy == Core.ReplacementPolicy.NUR_01_First
+                || policy == Core.ReplacementPolicy.NUR_10_First
+                || policy == Core.ReplacementPolicy.SecondChance
+                || policy == Core.ReplacementPolicy.WSClockLite;
+        }
+
+        private static bool UsesModifiedPages(Core.ReplacementPolicy policy)
+        {
+            return policy == Core.ReplacementPolicy.NUR_01_First
+                || policy == Core.ReplacementPolicy.NUR_10_First
+                || policy == Core.ReplacementPolicy.WSClockLite;
         }
     }
 }

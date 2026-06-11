@@ -12,19 +12,20 @@ namespace Memory_Policy_Simulator
             NUR_01_First,
             NUR_10_First,
             SecondChance,
-            LRFULite
+            WSClockLite
         }
 
         public const int PageFaultDelayUnitMs = 10;
-        private const double LrfuDecayFactor = 0.85;
+        private const int DefaultWsClockAgeThreshold = 4;
 
+        private int currentStep;
         private int clockHand;
         private readonly int referenceResetInterval;
         private readonly ReplacementPolicy policy;
         private readonly HashSet<char> modifiedInputPages;
         private readonly Dictionary<char, bool> referenceBits;
         private readonly Dictionary<char, bool> modifiedBits;
-        private readonly Dictionary<char, double> lrfuScores;
+        private readonly Dictionary<char, int> lastUseSteps;
 
         public int p_frame_size;
         public List<Page> frame_window;
@@ -35,11 +36,11 @@ namespace Memory_Policy_Simulator
         public int migration;
 
         public Core(int get_frame_size, ReplacementPolicy get_policy)
-            : this(get_frame_size, get_policy, 0, 4, "")
+            : this(get_frame_size, get_policy, 0, "")
         {
         }
 
-        public Core(int get_frame_size, ReplacementPolicy get_policy, int clock_start, int reset_interval, string modified_pages)
+        public Core(int get_frame_size, ReplacementPolicy get_policy, int clock, string modified_pages)
         {
             if (get_frame_size <= 0)
             {
@@ -49,26 +50,22 @@ namespace Memory_Policy_Simulator
             Page.CREATE_ID = 0;
             this.p_frame_size = get_frame_size;
             this.policy = get_policy;
-            this.clockHand = NormalizeClockStart(clock_start, get_frame_size);
-            this.referenceResetInterval = reset_interval <= 0 ? 0 : reset_interval;
+            this.clockHand = 0;
+            this.referenceResetInterval = clock <= 0 ? 0 : clock;
             this.modifiedInputPages = new HashSet<char>((modified_pages ?? "").Where(x => !Char.IsWhiteSpace(x)));
             this.frame_window = new List<Page>();
             this.pageHistory = new List<Page>();
             this.referenceBits = new Dictionary<char, bool>();
             this.modifiedBits = new Dictionary<char, bool>();
-            this.lrfuScores = new Dictionary<char, double>();
+            this.lastUseSteps = new Dictionary<char, int>();
         }
 
         public Page.STATUS Operate(char data, int index, string referenceString)
         {
+            this.currentStep = index;
             Page newPage = CreateHistoryPage(data);
 
             ApplyPeriodicReferenceReset(index, newPage);
-
-            if (this.policy == ReplacementPolicy.LRFULite)
-            {
-                DecayLrfuScores();
-            }
 
             int hitIndex = this.frame_window.FindIndex(x => x.data == data);
 
@@ -138,8 +135,8 @@ namespace Memory_Policy_Simulator
                     return ReplacementPolicy.NUR_10_First;
                 case "Second Chance":
                     return ReplacementPolicy.SecondChance;
-                case "LRFU-Lite":
-                    return ReplacementPolicy.LRFULite;
+                case "WSClock-Lite":
+                    return ReplacementPolicy.WSClockLite;
                 case "FIFO":
                 default:
                     return ReplacementPolicy.FIFO;
@@ -151,13 +148,14 @@ namespace Memory_Policy_Simulator
             switch (this.policy)
             {
                 case ReplacementPolicy.NUR_01_First:
-                    return "NUR order: (0,0) -> (0,1) -> (1,0) -> (1,1), R reset interval=" + this.referenceResetInterval;
+                    return "NUR order: (0,0) -> (0,1) -> (1,0) -> (1,1), clock=" + this.referenceResetInterval;
                 case ReplacementPolicy.NUR_10_First:
-                    return "NUR order: (0,0) -> (1,0) -> (0,1) -> (1,1), R reset interval=" + this.referenceResetInterval;
+                    return "NUR order: (0,0) -> (1,0) -> (0,1) -> (1,1), clock=" + this.referenceResetInterval;
                 case ReplacementPolicy.SecondChance:
-                    return "Second Chance clock start frame=" + (this.clockHand + 1);
-                case ReplacementPolicy.LRFULite:
-                    return "LRFU-Lite decay factor=" + LrfuDecayFactor;
+                    return "Second Chance clock=" + this.referenceResetInterval + ", clock hand starts at F1";
+                case ReplacementPolicy.WSClockLite:
+                    return "WSClock-Lite age threshold=" + GetWsClockAgeThreshold() +
+                        ", clock hand starts at F1";
                 case ReplacementPolicy.FIFO:
                 default:
                     return "FIFO keeps the original insertion order.";
@@ -182,16 +180,6 @@ namespace Memory_Policy_Simulator
         public int GetEstimatedPageFaultDelay()
         {
             return this.fault * PageFaultDelayUnitMs;
-        }
-
-        private static int NormalizeClockStart(int clockStart, int frameSize)
-        {
-            if (clockStart <= 0)
-            {
-                return 0;
-            }
-
-            return (clockStart - 1) % frameSize;
         }
 
         private Page CreateHistoryPage(char data)
@@ -224,8 +212,8 @@ namespace Memory_Policy_Simulator
                     return SelectNurVictim(true, historyPage);
                 case ReplacementPolicy.SecondChance:
                     return SelectSecondChanceVictim(historyPage);
-                case ReplacementPolicy.LRFULite:
-                    return SelectLrfuLiteVictim(historyPage);
+                case ReplacementPolicy.WSClockLite:
+                    return SelectWsClockLiteVictim(historyPage);
                 case ReplacementPolicy.FIFO:
                 default:
                     historyPage.algorithmState = AppendState(historyPage.algorithmState, "FIFO victim: oldest page");
@@ -285,39 +273,70 @@ namespace Memory_Policy_Simulator
             }
         }
 
-        private int SelectLrfuLiteVictim(Page historyPage)
+        private int SelectWsClockLiteVictim(Page historyPage)
         {
-            int victimIndex = 0;
-            double lowestScore = double.MaxValue;
+            int threshold = GetWsClockAgeThreshold();
+            int fallbackIndex = this.clockHand;
+            List<string> scans = new List<string>();
 
-            for (int i = 0; i < this.frame_window.Count; i++)
+            for (int scanCount = 0; scanCount < this.frame_window.Count * 2; scanCount++)
             {
-                char frameData = this.frame_window[i].data;
-                double score = this.lrfuScores.ContainsKey(frameData) ? this.lrfuScores[frameData] : 0.0;
+                int index = this.clockHand;
+                char frameData = this.frame_window[index].data;
+                bool referenced = GetReferenceBit(frameData);
+                bool modified = GetModifiedBit(frameData);
+                int lastUse = this.lastUseSteps.ContainsKey(frameData) ? this.lastUseSteps[frameData] : 0;
+                int age = this.currentStep - lastUse;
 
-                if (score < lowestScore)
+                scans.Add("F" + (index + 1) + ":" + frameData +
+                    "/R=" + (referenced ? "1" : "0") +
+                    "/M=" + (modified ? "1" : "0") +
+                    "/age=" + age);
+
+                if (referenced)
                 {
-                    lowestScore = score;
-                    victimIndex = i;
+                    this.referenceBits[frameData] = false;
+                    this.lastUseSteps[frameData] = this.currentStep;
+                    this.clockHand = (this.clockHand + 1) % this.p_frame_size;
+                    continue;
                 }
+
+                if (age >= threshold && !modified)
+                {
+                    this.clockHand = (this.clockHand + 1) % this.p_frame_size;
+                    historyPage.algorithmState = AppendState(
+                        historyPage.algorithmState,
+                        "WSClock victim scan=" + string.Join(" -> ", scans.ToArray()) +
+                        ", threshold=" + threshold +
+                        ", nextClock=F" + (this.clockHand + 1));
+                    return index;
+                }
+
+                if (age >= threshold && modified)
+                {
+                    this.modifiedBits[frameData] = false;
+                }
+
+                this.clockHand = (this.clockHand + 1) % this.p_frame_size;
             }
 
-            historyPage.algorithmState = AppendState(historyPage.algorithmState, "LRFU victim score=" + lowestScore.ToString("0.###"));
-            return victimIndex;
+            this.clockHand = (fallbackIndex + 1) % this.p_frame_size;
+            historyPage.algorithmState = AppendState(
+                historyPage.algorithmState,
+                "WSClock fallback scan=" + string.Join(" -> ", scans.ToArray()) +
+                ", threshold=" + threshold +
+                ", nextClock=F" + (this.clockHand + 1));
+            return fallbackIndex;
         }
 
         private void MarkReferenced(char data)
         {
             this.referenceBits[data] = true;
+            this.lastUseSteps[data] = this.currentStep;
 
             if (this.modifiedInputPages.Contains(data))
             {
                 this.modifiedBits[data] = true;
-            }
-
-            if (this.lrfuScores.ContainsKey(data))
-            {
-                this.lrfuScores[data] += 1.0;
             }
         }
 
@@ -325,14 +344,14 @@ namespace Memory_Policy_Simulator
         {
             this.referenceBits[data] = true;
             this.modifiedBits[data] = this.modifiedInputPages.Contains(data);
-            this.lrfuScores[data] = 1.0;
+            this.lastUseSteps[data] = this.currentStep;
         }
 
         private void RemoveMetadata(char data)
         {
             this.referenceBits.Remove(data);
             this.modifiedBits.Remove(data);
-            this.lrfuScores.Remove(data);
+            this.lastUseSteps.Remove(data);
         }
 
         private void ApplyPeriodicReferenceReset(int index, Page historyPage)
@@ -352,14 +371,9 @@ namespace Memory_Policy_Simulator
             historyPage.algorithmState = AppendState(historyPage.algorithmState, "R bits reset before step " + (index + 1));
         }
 
-        private void DecayLrfuScores()
+        private int GetWsClockAgeThreshold()
         {
-            List<char> keys = this.lrfuScores.Keys.ToList();
-
-            foreach (char key in keys)
-            {
-                this.lrfuScores[key] *= LrfuDecayFactor;
-            }
+            return this.referenceResetInterval > 0 ? this.referenceResetInterval : DefaultWsClockAgeThreshold;
         }
 
         private bool GetReferenceBit(char data)
@@ -393,8 +407,8 @@ namespace Memory_Policy_Simulator
                     return BuildBitSnapshot();
                 case ReplacementPolicy.SecondChance:
                     return "clock=F" + (this.clockHand + 1) + "; " + BuildBitSnapshot();
-                case ReplacementPolicy.LRFULite:
-                    return BuildScoreSnapshot();
+                case ReplacementPolicy.WSClockLite:
+                    return "clock=F" + (this.clockHand + 1) + "; " + BuildWsClockSnapshot();
                 case ReplacementPolicy.FIFO:
                 default:
                     return "fifo-order=[" + BuildFrameSnapshot() + "]";
@@ -414,17 +428,20 @@ namespace Memory_Policy_Simulator
             return string.Join(" ", states.ToArray());
         }
 
-        private string BuildScoreSnapshot()
+        private string BuildWsClockSnapshot()
         {
             List<string> states = new List<string>();
 
             foreach (Page page in this.frame_window)
             {
-                double score = this.lrfuScores.ContainsKey(page.data) ? this.lrfuScores[page.data] : 0.0;
-                states.Add(page.data + "=" + score.ToString("0.###"));
+                int lastUse = this.lastUseSteps.ContainsKey(page.data) ? this.lastUseSteps[page.data] : 0;
+                int age = this.currentStep - lastUse;
+                states.Add(page.data + "(R=" + (GetReferenceBit(page.data) ? "1" : "0") +
+                    ",M=" + (GetModifiedBit(page.data) ? "1" : "0") +
+                    ",age=" + age + ")");
             }
 
-            return "scores{" + string.Join(", ", states.ToArray()) + "}";
+            return string.Join(" ", states.ToArray());
         }
 
         private static string BuildNurOrderText(int[][] order)

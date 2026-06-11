@@ -29,6 +29,8 @@ namespace Memory_Policy_Simulator
             this.pImage.Controls.Add(this.pbPlaceHolder);
             this.tbConsole.Multiline = true;
             this.tbConsole.ScrollBars = ScrollBars.Vertical;
+            this.comboBox1.SelectedIndexChanged += new EventHandler(this.comboBox1_SelectedIndexChanged);
+            UpdatePolicyOptions();
         }
 
         private void DrawBase(Core core, int windowSize, int dataLength)
@@ -142,24 +144,17 @@ namespace Memory_Policy_Simulator
                     return;
                 }
 
-                int clockStart;
                 int resetInterval;
-
-                if (!int.TryParse(this.tbClockStart.Text, out clockStart) || clockStart <= 0)
-                {
-                    MessageBox.Show("Clock start must be a positive frame number.");
-                    return;
-                }
 
                 if (!int.TryParse(this.tbResetInterval.Text, out resetInterval) || resetInterval < 0)
                 {
-                    MessageBox.Show("R reset interval must be zero or a positive number.");
+                    MessageBox.Show("Clock must be zero or a positive number.");
                     return;
                 }
 
                 /* initalize */
                 Core.ReplacementPolicy policy = Core.ParsePolicy(this.comboBox1.Text);
-                var window = new Core(windowSize, policy, clockStart, resetInterval, this.tbModifiedPages.Text);
+                var window = new Core(windowSize, policy, 1, resetInterval, this.tbModifiedPages.Text);
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 for (int i = 0; i < data.Length; i++)
@@ -183,7 +178,10 @@ namespace Memory_Policy_Simulator
 
                 this.tbConsole.Text += "\r\nPolicy: " + this.comboBox1.Text + "\r\n";
                 this.tbConsole.Text += "Policy Detail: " + window.GetPolicyDescription() + "\r\n";
-                this.tbConsole.Text += "Modified Pages Input: " + (this.tbModifiedPages.Text == "" ? "(none)" : this.tbModifiedPages.Text) + "\r\n";
+                if (UsesModifiedPages(policy))
+                {
+                    this.tbConsole.Text += "Modified Pages Input: " + (this.tbModifiedPages.Text == "" ? "(none)" : this.tbModifiedPages.Text) + "\r\n";
+                }
                 this.tbConsole.Text += "Hit Count: " + window.hit + "\r\n";
                 this.tbConsole.Text += "Page Fault Count: " + window.fault + "\r\n";
                 this.tbConsole.Text += "Migration Count: " + window.migration + "\r\n";
@@ -199,9 +197,9 @@ namespace Memory_Policy_Simulator
                 resultChartContent.Points.AddXY("Hit", window.hit);
                 resultChartContent.Points.AddXY("Fault", window.fault);
                 resultChartContent.Points[0].IsValueShownAsLabel = true;
-                resultChartContent.Points[0].LegendText = $"Hit {window.hit}";
+                resultChartContent.Points[0].LegendText = "Hit " + window.hit;
                 resultChartContent.Points[1].IsValueShownAsLabel = true;
-                resultChartContent.Points[1].LegendText = $"Fault {window.fault} (Migrated {window.migration})";
+                resultChartContent.Points[1].LegendText = "Fault " + window.fault + " (Migrated " + window.migration + ")";
 
                 this.lbPageFaultRatio.Text = Math.Round(faultRate * 100, 2) + "%";
             }
@@ -261,6 +259,48 @@ namespace Memory_Policy_Simulator
         private void btnSave_Click(object sender, EventArgs e)
         {
             bResultImage.Save("./result.jpg");
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdatePolicyOptions();
+        }
+
+        private void UpdatePolicyOptions()
+        {
+            Core.ReplacementPolicy policy = Core.ParsePolicy(this.comboBox1.Text);
+            bool usesClock = UsesClock(policy);
+            bool usesModifiedPages = UsesModifiedPages(policy);
+
+            this.label5.Visible = false;
+            this.tbClockStart.Visible = false;
+
+            this.label6.Visible = usesClock;
+            this.tbResetInterval.Visible = usesClock;
+            this.label7.Visible = usesModifiedPages;
+            this.tbModifiedPages.Visible = usesModifiedPages;
+
+            this.label6.Text = "Clock";
+            this.label6.Location = new Point(174, 66);
+            this.tbResetInterval.Location = new Point(174, 96);
+            this.label7.Location = new Point(297, 66);
+            this.tbModifiedPages.Location = new Point(297, 96);
+            this.tbModifiedPages.Width = 463;
+        }
+
+        private static bool UsesClock(Core.ReplacementPolicy policy)
+        {
+            return policy == Core.ReplacementPolicy.NUR_01_First
+                || policy == Core.ReplacementPolicy.NUR_10_First
+                || policy == Core.ReplacementPolicy.SecondChance
+                || policy == Core.ReplacementPolicy.WSClockLite;
+        }
+
+        private static bool UsesModifiedPages(Core.ReplacementPolicy policy)
+        {
+            return policy == Core.ReplacementPolicy.NUR_01_First
+                || policy == Core.ReplacementPolicy.NUR_10_First
+                || policy == Core.ReplacementPolicy.WSClockLite;
         }
     }
 }

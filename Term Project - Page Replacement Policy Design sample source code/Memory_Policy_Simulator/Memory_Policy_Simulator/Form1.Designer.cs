@@ -159,7 +159,7 @@
             "NUR (0,1 first)",
             "NUR (1,0 first)",
             "Second Chance",
-            "LRFU-Lite"});
+            "WSClock-Lite"});
             this.comboBox1.Location = new System.Drawing.Point(12, 34);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(156, 32);
@@ -265,7 +265,7 @@
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(91, 27);
             this.label6.TabIndex = 14;
-            this.label6.Text = "R Reset";
+            this.label6.Text = "Clock";
             // 
             // label7
             // 

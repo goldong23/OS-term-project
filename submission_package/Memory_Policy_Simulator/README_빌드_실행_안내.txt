@@ -1,25 +1,27 @@
-Memory Policy Simulator 빌드/실행 안내
+Memory Policy Simulator Build/Run Guide
 
-1. 실행 파일
+1. Executable
 - Memory_Policy_Simulator\bin\Release\Memory_Policy_Simulator.exe
 
-2. Visual Studio 빌드
-- Memory_Policy_Simulator.sln 파일을 Visual Studio에서 연다.
-- 프로젝트 대상은 .NET Framework v4.8이다.
-- 빌드 PC에 .NET Framework 4.8 Developer Pack이 필요할 수 있다.
+2. Visual Studio build
+- Open Memory_Policy_Simulator.sln in Visual Studio.
+- Target framework: .NET Framework 4.8.
+- A PC without the .NET Framework 4.8 Developer Pack may fail to build the project file.
 
-3. 구현 정책
+3. Implemented policies
 - FIFO
-- NUR (0,1 first): R/M bit class 중 (0,1)을 (1,0)보다 먼저 교체 후보로 본다.
-- NUR (1,0 first): R/M bit class 중 (1,0)을 (0,1)보다 먼저 교체 후보로 본다.
-- Second Chance
-- LRFU-Lite
+- NUR (0,1 first): selects victims by R/M bit class with (0,1) before (1,0).
+- NUR (1,0 first): selects victims by R/M bit class with (1,0) before (0,1).
+- Second Chance: uses reference bits and a circular clock hand.
+- WSClock-Lite: uses a clock hand, R/M bits, last-use age, and an age threshold.
 
-4. 사용 방법
-- Policy 콤보박스에서 교체 정책을 선택한다.
-- Reference String에는 한 글자 단위 페이지 참조열을 입력한다.
-- #Frame에는 프레임 수를 입력한다.
-- Clock Start에는 Second Chance의 초기 clock hand 위치를 1부터 시작하는 값으로 입력한다.
-- R Reset에는 NUR의 reference bit를 몇 번의 참조마다 초기화할지 입력한다.
-- Modified Pages에는 modified bit를 1로 둘 페이지 문자를 입력한다. 예: AD
-- Run을 누르면 단계별 결과, 프레임 전이, chart, fault rate와 함께 각 알고리즘의 내부 상태가 출력된다.
+4. Options
+- Policy: selects the page replacement policy.
+- Reference String: treats each character as one page reference.
+- #Frame: sets the number of page frames.
+- Clock: resets R bits every N steps. It is used by NUR and Second Chance. In WSClock-Lite, the same value is also used as the age threshold.
+- Modified Pages: marks listed page characters as M=1. It is used by NUR and WSClock-Lite.
+- The UI only displays the options used by the currently selected policy.
+
+5. Run
+- Press Run to print each step, frame state, victim page, policy state, chart, and page fault rate.
